@@ -1,0 +1,182 @@
+{% extends 'base.html' %}
+{% block title %}Patient — {{ patient['First_Name'] }} {{ patient['Last_Name'] }}{% endblock %}
+{% block topbar_title %}
+  Patient: {{ patient['First_Name'] }} {{ patient['Last_Name'] }}
+{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('doctor.dashboard') }}" class="btn-ghost" id="btn-back-doctor">← My Dashboard</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+
+  <!-- Patient Info Card -->
+  <div class="card" id="patient-info-card">
+    <div class="profile-avatar-section">
+      <div class="profile-avatar" style="background:linear-gradient(135deg,var(--blue),var(--purple))">
+        {{ patient['First_Name'][0] }}{{ patient['Last_Name'][0] }}
+      </div>
+      <div>
+        <div class="profile-name">{{ patient['First_Name'] }} {{ patient['Last_Name'] }}</div>
+        <div class="profile-email">{{ patient['Email'] }}</div>
+        <div style="display:flex;gap:.75rem;margin-top:.5rem;flex-wrap:wrap">
+          {% if patient['DOB'] %}<span class="badge badge-in">DOB: {{ patient['DOB'] }}</span>{% endif %}
+          {% if patient['Gender'] %}<span class="badge badge-tele">{{ patient['Gender'] }}</span>{% endif %}
+          {% if patient['Phone'] %}<span style="font-size:.8rem;color:var(--text-m)">📞 {{ patient['Phone'] }}</span>{% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <!-- Appointments -->
+    <div class="card" id="patient-appointments-card">
+      <div class="card-header"><h2 class="card-title">📅 Appointments</h2></div>
+      {% if appointments %}
+      <div class="appt-list">
+        {% for a in appointments %}
+        <div class="appt-item">
+          <div class="appt-avatar" style="background:linear-gradient(135deg,var(--teal),var(--blue))">{{ a['Doctor_Name'][0] }}</div>
+          <div class="appt-info">
+            <div class="appt-doctor">Dr. {{ a['Doctor_Name'] }}</div>
+            <div class="appt-time">{{ a['Scheduled_At'][:16] }}</div>
+            {% if a['Notes'] %}<div style="font-size:.78rem;color:var(--text-m)">{{ a['Notes'] }}</div>{% endif %}
+          </div>
+          <div class="appt-meta">
+            <span class="badge badge-{{ 'tele' if a['Mode'] == 'Telemedicine' else 'in' }}">{{ a['Mode'] }}</span>
+            <span class="badge badge-{{ a['Status'].lower() }}">{{ a['Status'] }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state"><p>No appointments found.</p></div>
+      {% endif %}
+    </div>
+
+    <!-- Prescriptions -->
+    <div class="card" id="patient-rx-card">
+      <div class="card-header"><h2 class="card-title">💊 Prescriptions</h2></div>
+      {% if prescriptions %}
+      {% for rx in prescriptions %}
+      <div class="med-row">
+        <div class="med-icon">💊</div>
+        <div style="flex:1">
+          <div class="med-name">{{ rx['Medicine_Name'] }}</div>
+          <div class="med-dose">{{ rx['Dosage_Instructions'] }}</div>
+          <div style="font-size:.75rem;color:var(--text-d)">{{ rx['Duration_Days'] }} days · Dr. {{ rx['Doctor_Name'] or 'N/A' }}</div>
+        </div>
+        <span class="badge badge-in" style="font-size:.72rem">{{ rx['Category'] }}</span>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state"><p>No prescriptions.</p></div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- AI Chat History (doctor view) -->
+  <div class="card" id="patient-chat-history-card">
+    <div class="card-header">
+      <h2 class="card-title">💬 Patient AI Chat History</h2>
+      <span class="card-hint">Showing last 20 messages</span>
+    </div>
+    {% if chat_msgs %}
+    <div style="display:flex;flex-direction:column;gap:.5rem;max-height:400px;overflow-y:auto">
+      {% for m in chat_msgs|reverse %}
+      <div style="display:flex;gap:.75rem;align-items:flex-start;{% if m['Role'] == 'user' %}flex-direction:row-reverse{% endif %}">
+        <div style="width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:700;flex-shrink:0;background:{% if m['Role'] == 'user' %}linear-gradient(135deg,var(--purple),var(--blue));color:#fff{% else %}linear-gradient(135deg,var(--teal),var(--blue));color:#000{% endif %}">
+          {% if m['Role'] == 'user' %}{{ patient['First_Name'][0] }}{% else %}AI{% endif %}
+        </div>
+        <div style="max-width:70%;padding:.75rem 1rem;border-radius:12px;font-size:.83rem;line-height:1.5;{% if m['Role'] == 'user' %}background:rgba(124,58,237,.15);border:1px solid rgba(124,58,237,.2){% else %}background:var(--glass-b);border:1px solid var(--border){% endif %}">
+          {{ m['Content'] }}
+          {% if m['Intent'] %}<div style="font-size:.7rem;color:var(--text-d);margin-top:.25rem">Intent: {{ m['Intent'] }}</div>{% endif %}
+          <div style="font-size:.7rem;color:var(--text-d)">{{ m['Created_At'][:16] }}</div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state"><p>No AI chat history for this patient.</p></div>
+    {% endif %}
+  </div>
+
+  <!-- Symptom Logs -->
+  {% if symptom_logs %}
+  <div class="card" id="patient-symptom-card">
+    <div class="card-header"><h2 class="card-title">🩺 AI Symptom Logs</h2></div>
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead><tr><th>Symptoms</th><th>Severity</th><th>Escalated</th><th>Date</th></tr></thead>
+        <tbody>
+          {% for sl in symptom_logs %}
+          <tr>
+            <td>{{ sl['Symptoms'] }}</td>
+            <td><span class="severity-badge sev-{{ sl['Severity'] or 'LOW' }}" style="font-size:.75rem">{{ sl['Severity'] or 'LOW' }}</span></td>
+            <td>{% if sl['Is_Escalated'] %}<span style="color:var(--red)">⚠️ Yes</span>{% else %}No{% endif %}</td>
+            <td style="font-size:.8rem;color:var(--text-m)">{{ sl['Logged_At'][:16] }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Add Clinical Note -->
+  <div class="card" id="add-note-card">
+    <div class="card-header"><h2 class="card-title">📝 Add Clinical Note</h2></div>
+    <div class="form-group">
+      <textarea class="form-input" id="note-input" rows="3" placeholder="Enter clinical observations, treatment plan, follow-up instructions…" style="resize:vertical"></textarea>
+    </div>
+    <button class="btn-primary" id="btn-add-note" onclick="addNote()">Save Note</button>
+
+    {% if notes %}
+    <div style="margin-top:1.5rem">
+      <div class="card-header"><h2 class="card-title" style="font-size:.85rem">Previous Notes</h2></div>
+      {% for n in notes %}
+      <div class="recent-chat-item" style="border-left-color:var(--blue);margin-bottom:.5rem">
+        <div style="font-size:.78rem;color:var(--teal);margin-bottom:.2rem">Dr. {{ n['Doctor_Name'] }}</div>
+        <p style="font-size:.85rem;color:var(--text-m)">{{ n['Note'] }}</p>
+        <div class="recent-chat-time">{{ n['Created_At'][:16] }}</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}"/>
+<input type="hidden" id="patient-id" value="{{ patient['Patient_ID'] }}"/>
+{% endblock %}
+
+{% block scripts %}
+<script>
+async function addNote() {
+  const note = document.getElementById('note-input').value.trim();
+  const patientId = document.getElementById('patient-id').value;
+  const csrf = document.getElementById('csrf-token').value;
+  if (!note) return;
+  const btn = document.getElementById('btn-add-note');
+  btn.disabled = true;
+  btn.textContent = 'Saving…';
+  const res = await fetch('/doctor/note', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRF-Token': csrf},
+    body: JSON.stringify({patient_id: patientId, note: note, csrf_token: csrf})
+  });
+  const data = await res.json();
+  if (data.success) {
+    document.getElementById('note-input').value = '';
+    btn.textContent = '✓ Saved!';
+    setTimeout(() => { btn.textContent = 'Save Note'; btn.disabled = false; location.reload(); }, 1500);
+  } else {
+    btn.textContent = 'Error — Try again';
+    btn.disabled = false;
+  }
+}
+</script>
+{% endblock %}

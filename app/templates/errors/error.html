@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+  <title>Error — MedAssist</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    body{margin:0;font-family:'Inter',sans-serif;background:#060d1f;color:#e2e8f0;display:flex;align-items:center;justify-content:center;min-height:100vh;text-align:center}
+    .box{max-width:480px;padding:3rem 2rem}
+    .code{font-size:5rem;font-weight:700;color:#00d4aa;line-height:1;margin-bottom:1rem}
+    h1{font-size:1.5rem;font-weight:600;margin-bottom:.75rem}
+    p{color:#94a3b8;margin-bottom:2rem}
+    a{display:inline-block;background:#00d4aa;color:#000;font-weight:600;padding:.75rem 2rem;border-radius:10px;text-decoration:none}
+    a:hover{background:#00a882}
+  </style>
+</head>
+<body>
+  <div class="box">
+    <div class="code">{{ code }}</div>
+    <h1>{{ title }}</h1>
+    <p>{{ message }}</p>
+    <a href="/">← Go Home</a>
+  </div>
+</body>
+</html>

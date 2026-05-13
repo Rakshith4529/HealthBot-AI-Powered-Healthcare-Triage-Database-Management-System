@@ -1,0 +1,96 @@
+{% extends 'base.html' %}
+{% block title %}AI Assistant{% endblock %}
+{% block topbar_title %}AI Medical Assistant{% endblock %}
+{% block topbar_actions %}
+<div class="ollama-badge" id="ollama-badge">
+  <span class="ollama-dot" id="ollama-dot"></span>
+  <span id="ollama-label">Checking AI…</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="chat-container" id="chat-container">
+
+  <!-- Messages Area -->
+  <div class="chat-messages" id="chat-messages">
+
+    <!-- Welcome message if no history -->
+    {% if not history %}
+    <div class="msg-row msg-bot" id="welcome-msg">
+      <div class="msg-avatar">✚</div>
+      <div class="msg-bubble msg-bubble-bot">
+        <p>👋 Hello! I'm <strong>MedAssist AI</strong>, your personal healthcare assistant.</p>
+        <p style="margin-top:0.5rem">I can help you:</p>
+        <ul class="welcome-list">
+          <li>📅 <strong>Book or cancel appointments</strong></li>
+          <li>💊 <strong>View your prescriptions</strong></li>
+          <li>🩺 <strong>Check symptoms and get advice</strong></li>
+          <li>🔍 <strong>Find doctors</strong> by specialization</li>
+          <li>👤 <strong>Manage your profile</strong></li>
+        </ul>
+        <p style="margin-top:0.5rem">How can I help you today?</p>
+        <div class="msg-time">MedAssist AI</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Chat history -->
+    {% for msg in history %}
+    <div class="msg-row {{ 'msg-user' if msg.Role == 'user' else 'msg-bot' }}">
+      {% if msg.Role == 'assistant' %}
+      <div class="msg-avatar">✚</div>
+      {% endif %}
+      <div class="msg-bubble {{ 'msg-bubble-user' if msg.Role == 'user' else 'msg-bubble-bot' }}">
+        {{ msg.Content | safe }}
+        <div class="msg-time">{{ msg.Created_At[:16] if msg.Created_At else '' }}</div>
+      </div>
+      {% if msg.Role == 'user' %}
+      <div class="msg-avatar msg-avatar-user">You</div>
+      {% endif %}
+    </div>
+    {% endfor %}
+
+    <!-- Typing indicator (hidden) -->
+    <div class="msg-row msg-bot" id="typing-indicator" style="display:none">
+      <div class="msg-avatar">✚</div>
+      <div class="msg-bubble msg-bubble-bot typing">
+        <span></span><span></span><span></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Suggestion chips -->
+  <div class="chat-suggestions" id="chat-suggestions">
+    <button class="chip" onclick="sendChip(this)" id="chip-headache">🤒 I have a headache</button>
+    <button class="chip" onclick="sendChip(this)" id="chip-book">📅 Book appointment</button>
+    <button class="chip" onclick="sendChip(this)" id="chip-meds">💊 My medicines</button>
+    <button class="chip" onclick="sendChip(this)" id="chip-doctors">🔍 Find doctors</button>
+    <button class="chip" onclick="sendChip(this)" id="chip-appts">📋 My appointments</button>
+  </div>
+
+  <!-- Input Bar -->
+  <div class="chat-input-bar" id="chat-input-bar">
+    <textarea
+      id="chat-input"
+      class="chat-input"
+      placeholder="Type your message… (e.g. 'I have a fever and headache')"
+      rows="1"
+      maxlength="1000"
+    ></textarea>
+    <button class="chat-send-btn" id="chat-send-btn" onclick="sendMessage()">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <line x1="22" y1="2" x2="11" y2="13"></line>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+      </svg>
+    </button>
+  </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF_TOKEN = "{{ csrf_token }}";
+const INITIAL_Q = new URLSearchParams(window.location.search).get('q');
+</script>
+<script src="{{ url_for('static', filename='js/chat.js') }}"></script>
+{% endblock %}

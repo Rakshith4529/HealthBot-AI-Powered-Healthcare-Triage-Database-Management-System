@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="MedAssist — AI-powered healthcare platform for appointments, prescriptions, and medical advice."/>
+  <title>{% block title %}MedAssist{% endblock %} — AI Healthcare</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}"/>
+  {% block head %}{% endblock %}
+</head>
+<body class="role-{{ session.get('role','guest') }}">
+
+{% if session.get('patient_id') %}
+<!-- ── Sidebar ──────────────────────────────────────────────────────── -->
+<aside class="sidebar" id="sidebar">
+  <div class="sidebar-brand">
+    <div class="brand-icon">✚</div>
+    <span>MedAssist</span>
+  </div>
+
+  <nav class="sidebar-nav">
+    {% if session.get('role') == 'doctor' %}
+      <!-- DOCTOR NAV -->
+      <a href="{{ url_for('doctor.dashboard') }}" class="nav-item {% if 'doctor' in request.endpoint %}active{% endif %}" id="nav-doctor-dash">
+        <span class="nav-icon">🩺</span><span>My Dashboard</span>
+      </a>
+      <a href="{{ url_for('doctor.appointments_api') }}" class="nav-item" id="nav-doctor-appts" onclick="event.preventDefault(); window.location='/doctor/dashboard#appointments'">
+        <span class="nav-icon">📅</span><span>My Appointments</span>
+      </a>
+      <div class="nav-section-label">LIVE SYNC</div>
+      <div class="sync-indicator" id="sync-indicator">
+        <span class="sync-dot"></span>
+        <span class="sync-text">Appointments syncing…</span>
+      </div>
+
+    {% elif session.get('is_admin') %}
+      <!-- ADMIN NAV -->
+      <a href="{{ url_for('admin.index') }}" class="nav-item {% if request.endpoint == 'admin.index' %}active{% endif %}" id="nav-admin">
+        <span class="nav-icon">⚙</span><span>Admin Panel</span>
+      </a>
+
+    {% else %}
+      <!-- PATIENT NAV -->
+      <a href="{{ url_for('dashboard.index') }}" class="nav-item {% if request.endpoint == 'dashboard.index' %}active{% endif %}" id="nav-dashboard">
+        <span class="nav-icon">⊞</span><span>Dashboard</span>
+      </a>
+      <a href="{{ url_for('chat.chat_page') }}" class="nav-item {% if request.endpoint == 'chat.chat_page' %}active{% endif %}" id="nav-chat">
+        <span class="nav-icon">◎</span><span>AI Assistant</span>
+        <span class="nav-badge">AI</span>
+      </a>
+      <a href="{{ url_for('profile.index') }}" class="nav-item {% if request.endpoint == 'profile.index' %}active{% endif %}" id="nav-profile">
+        <span class="nav-icon">◷</span><span>My Profile</span>
+      </a>
+    {% endif %}
+  </nav>
+
+  <div class="sidebar-footer">
+    <div class="user-pill">
+      <div class="user-avatar role-av-{{ session.get('role','patient') }}">
+        {% if session.get('role') == 'doctor' %}🩺{% elif session.get('is_admin') %}⚙{% else %}{{ session.get('patient_id','?') }}{% endif %}
+      </div>
+      <div class="user-info">
+        <span class="user-role-badge">{{ session.get('role','patient')|title }}</span>
+      </div>
+    </div>
+    <form action="{{ url_for('auth.logout') }}" method="POST" style="margin:0">
+      <input type="hidden" name="csrf_token" value="{{ session.get('csrf_token','') }}"/>
+      <button type="submit" class="btn-logout" id="btn-logout">Sign Out</button>
+    </form>
+  </div>
+</aside>
+
+<!-- ── Main Content ─────────────────────────────────────────────────── -->
+<main class="main-content">
+  <div class="topbar">
+    <button class="sidebar-toggle" id="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+    <div class="topbar-title">{% block topbar_title %}{% endblock %}</div>
+    <div class="topbar-actions">{% block topbar_actions %}{% endblock %}</div>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="flash-container" id="flash-container">
+    {% for cat, msg in messages %}
+    <div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  {% block content %}{% endblock %}
+</main>
+
+{% else %}
+<!-- Public (auth) pages -->
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+<div class="flash-container" id="flash-container" style="position:fixed;top:1rem;right:1rem;z-index:9999;max-width:400px">
+  {% for cat, msg in messages %}
+  <div class="flash flash-{{ cat }}"><span>{{ msg }}</span><button onclick="this.parentElement.remove()">✕</button></div>
+  {% endfor %}
+</div>
+{% endif %}
+{% endwith %}
+{% block public_content %}{% endblock %}
+{% endif %}
+
+<script src="{{ url_for('static', filename='js/app.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

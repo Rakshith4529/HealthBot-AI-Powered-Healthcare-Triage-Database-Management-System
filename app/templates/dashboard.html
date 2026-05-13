@@ -1,0 +1,126 @@
+{% extends 'base.html' %}
+{% block title %}Dashboard{% endblock %}
+{% block topbar_title %}Dashboard{% endblock %}
+{% block topbar_actions %}
+<a href="{{ url_for('chat.chat_page') }}" class="btn-accent" id="btn-start-chat">💬 AI Assistant</a>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+
+  <!-- Stats Row -->
+  <div class="stats-grid">
+    <div class="stat-card" id="stat-appointments">
+      <div class="stat-icon stat-blue">📅</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ appt_count }}</div>
+        <div class="stat-label">Total Appointments</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-prescriptions">
+      <div class="stat-icon stat-green">💊</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ rx_count }}</div>
+        <div class="stat-label">Active Prescriptions</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-chats">
+      <div class="stat-icon stat-purple">🤖</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ chat_count }}</div>
+        <div class="stat-label">AI Consultations</div>
+      </div>
+    </div>
+    <div class="stat-card stat-cta" id="stat-cta">
+      <div class="stat-icon stat-teal">⚕</div>
+      <div class="stat-body">
+        <div class="stat-value">24/7</div>
+        <div class="stat-label">AI Support Available</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+    <!-- Upcoming Appointments -->
+    <div class="card" id="card-appointments">
+      <div class="card-header">
+        <h2 class="card-title">📅 Upcoming Appointments</h2>
+        <a href="{{ url_for('chat.chat_page') }}" class="card-action">Book via AI →</a>
+      </div>
+      {% if appointments %}
+      <div class="appt-list">
+        {% for a in appointments %}
+        <div class="appt-item">
+          <div class="appt-avatar">{{ a['Doctor_Name'][0] }}</div>
+          <div class="appt-info">
+            <div class="appt-doctor">Dr. {{ a['Doctor_Name'] }}</div>
+            <div class="appt-spec">{{ a['Specialization'] }}</div>
+            <div class="appt-time">Date: {{ a['Scheduled_At'][:10] }} | Time: {{ a['Scheduled_At'][11:16] }}</div>
+          </div>
+          <div class="appt-meta">
+            <span class="badge badge-{{ 'tele' if a['Mode'] == 'Telemedicine' else 'in' }}">{{ a['Mode'] }}</span>
+            <span class="badge badge-scheduled">{{ a['Status'] }}</span>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" id="empty-appointments">
+        <div class="empty-icon">📅</div>
+        <p>No upcoming appointments</p>
+        <a href="{{ url_for('chat.chat_page') }}" class="btn-primary" id="btn-book-first">Book via AI Assistant</a>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- AI Quick Actions -->
+    <div class="card" id="card-ai-actions">
+      <div class="card-header">
+        <h2 class="card-title">🤖 AI Quick Actions</h2>
+      </div>
+      <div class="quick-actions">
+        <a href="{{ url_for('chat.chat_page') }}?q=I+have+symptoms" class="qa-btn" id="qa-symptoms">
+          <span class="qa-icon">🩺</span>
+          <span>Check Symptoms</span>
+        </a>
+        <a href="{{ url_for('chat.chat_page') }}?q=Book+an+appointment" class="qa-btn" id="qa-book">
+          <span class="qa-icon">📅</span>
+          <span>Book Appointment</span>
+        </a>
+        <a href="{{ url_for('chat.chat_page') }}?q=Show+my+medicines" class="qa-btn" id="qa-meds">
+          <span class="qa-icon">💊</span>
+          <span>My Prescriptions</span>
+        </a>
+        <a href="{{ url_for('chat.chat_page') }}?q=Find+a+doctor" class="qa-btn" id="qa-doctors">
+          <span class="qa-icon">🔍</span>
+          <span>Find Doctors</span>
+        </a>
+        <a href="{{ url_for('chat.chat_page') }}?q=Show+my+appointments" class="qa-btn" id="qa-appts">
+          <span class="qa-icon">🗓</span>
+          <span>My Appointments</span>
+        </a>
+        <a href="{{ url_for('chat.chat_page') }}?q=Show+my+profile" class="qa-btn" id="qa-profile">
+          <span class="qa-icon">👤</span>
+          <span>My Profile</span>
+        </a>
+      </div>
+
+      {% if recent_chats %}
+      <div class="card-header" style="margin-top:1.5rem">
+        <h2 class="card-title">💬 Recent AI Advice</h2>
+      </div>
+      <div class="recent-chats">
+        {% for c in recent_chats %}
+        <div class="recent-chat-item">
+          <div class="recent-chat-dot"></div>
+          <p>{{ c['Content'][:120] }}{% if c['Content']|length > 120 %}…{% endif %}</p>
+          <span class="recent-chat-time">{{ c['Created_At'][:16] }}</span>
+        </div>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title %}Register{% endblock %}
+
+{% block public_content %}
+<div class="auth-bg">
+  <div class="auth-card" id="register-card">
+    <div class="auth-header">
+      <div class="auth-logo">✚</div>
+      <h1 class="auth-title">Create Account</h1>
+      <p class="auth-subtitle">Join MedAssist to manage your healthcare</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.register') }}" id="register-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="first_name">First Name</label>
+          <input class="form-input" type="text" id="first_name" name="first_name"
+                 placeholder="Alice" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="last_name">Last Name</label>
+          <input class="form-input" type="text" id="last_name" name="last_name"
+                 placeholder="Johnson" required/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="dob">Date of Birth</label>
+          <input class="form-input" type="date" id="dob" name="dob" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="gender">Gender</label>
+          <select class="form-input" id="gender" name="gender">
+            <option value="">Prefer not to say</option>
+            <option value="Male">Male</option>
+            <option value="Female">Female</option>
+            <option value="Other">Other</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-input" type="email" id="email" name="email"
+               placeholder="you@example.com" required/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password">Password <span class="hint">(min 8 chars)</span></label>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="password" name="password"
+                 placeholder="••••••••" required minlength="8"/>
+          <button type="button" class="input-toggle" onclick="togglePwd('password')" id="toggle-reg-pwd">👁</button>
+        </div>
+      </div>
+
+      <button type="submit" class="btn-primary btn-full" id="btn-register">Create Account</button>
+    </form>
+
+    <p class="auth-switch">
+      Already have an account? <a href="{{ url_for('auth.login') }}" id="link-login">Sign in</a>
+    </p>
+  </div>
+</div>
+
+<script>
+function togglePwd(id) {
+  const el = document.getElementById(id);
+  el.type = el.type === 'password' ? 'text' : 'password';
+}
+</script>
+{% endblock %}

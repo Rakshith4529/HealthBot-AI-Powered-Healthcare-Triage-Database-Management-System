@@ -1,0 +1,73 @@
+{% extends 'base.html' %}
+{% block title %}My Profile{% endblock %}
+{% block topbar_title %}My Profile{% endblock %}
+
+{% block content %}
+<div class="page-body">
+  <div class="card" id="profile-card" style="max-width:680px;margin:0 auto">
+    <div class="card-header">
+      <h2 class="card-title">👤 Personal Information</h2>
+    </div>
+
+    <div class="profile-avatar-section">
+      <div class="profile-avatar">{{ patient['First_Name'][0] }}{{ patient['Last_Name'][0] }}</div>
+      <div>
+        <div class="profile-name">{{ patient['First_Name'] }} {{ patient['Last_Name'] }}</div>
+        <div class="profile-email">{{ patient['Email'] }}</div>
+        <div class="profile-since">Member since {{ patient['Created_At'][:10] if patient['Created_At'] else 'N/A' }}</div>
+      </div>
+    </div>
+
+    <form method="POST" action="{{ url_for('profile.index') }}" id="profile-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="first_name">First Name</label>
+          <input class="form-input" type="text" id="first_name" name="first_name"
+                 value="{{ patient['First_Name'] }}" required/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="last_name">Last Name</label>
+          <input class="form-input" type="text" id="last_name" name="last_name"
+                 value="{{ patient['Last_Name'] }}" required/>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label" for="dob">Date of Birth</label>
+          <input class="form-input" type="date" id="dob" name="dob"
+                 value="{{ patient['DOB'] or '' }}"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="gender">Gender</label>
+          <select class="form-input" id="gender" name="gender">
+            <option value="">Prefer not to say</option>
+            {% for g in ['Male','Female','Other'] %}
+            <option value="{{ g }}" {{ 'selected' if patient['Gender'] == g }}>{{ g }}</option>
+            {% endfor %}
+          </select>
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="phone">Phone Number</label>
+        <input class="form-input" type="tel" id="phone" name="phone"
+               value="{{ patient['Phone'] or '' }}" placeholder="555-0101"/>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Email Address</label>
+        <input class="form-input" type="email" value="{{ patient['Email'] }}" disabled/>
+        <span class="hint">Email cannot be changed.</span>
+      </div>
+
+      <div style="display:flex;gap:1rem;margin-top:1rem">
+        <button type="submit" class="btn-primary" id="btn-save-profile">Save Changes</button>
+        <a href="{{ url_for('dashboard.index') }}" class="btn-ghost" id="btn-back-dashboard">← Dashboard</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

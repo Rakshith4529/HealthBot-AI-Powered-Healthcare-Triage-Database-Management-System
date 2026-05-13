@@ -1,0 +1,250 @@
+{% extends 'base.html' %}
+{% block title %}Doctor Dashboard{% endblock %}
+{% block topbar_title %}Dr. {{ doc['Name'] }} — {{ doc['Specialization'] }}{% endblock %}
+{% block topbar_actions %}
+<div class="live-sync-badge" id="live-sync-badge">
+  <span class="sync-dot-top"></span>
+  <span>Live Sync</span>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="page-body">
+
+  <!-- Doctor Stats -->
+  <div class="stats-grid">
+    <div class="stat-card" id="stat-total-patients">
+      <div class="stat-icon stat-blue">👥</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.total_patients }}</div>
+        <div class="stat-label">Total Patients</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-upcoming">
+      <div class="stat-icon stat-teal">📅</div>
+      <div class="stat-body">
+        <div class="stat-value" id="upcoming-count">{{ stats.upcoming_count }}</div>
+        <div class="stat-label">Upcoming Appointments</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-completed">
+      <div class="stat-icon stat-green">✅</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.completed_count }}</div>
+        <div class="stat-label">Completed</div>
+      </div>
+    </div>
+    <div class="stat-card" id="stat-prescriptions">
+      <div class="stat-icon stat-purple">💊</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.prescriptions_given }}</div>
+        <div class="stat-label">Prescriptions Given</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dashboard-grid">
+
+    <!-- ── Upcoming Appointments (LIVE SYNC) ── -->
+    <div class="card" id="card-upcoming-appointments">
+      <div class="card-header">
+        <h2 class="card-title">📅 Upcoming Appointments
+          <span class="live-pill">LIVE</span>
+        </h2>
+        <span class="card-hint">Auto-updates when patients book</span>
+      </div>
+
+      <div id="upcoming-appts-list">
+        {% if upcoming %}
+        {% for a in upcoming %}
+        <div class="appt-item doctor-appt-item" id="appt-{{ a['Appointment_ID'] }}">
+          <div class="appt-avatar">{{ a['Patient_Name'][0] }}</div>
+          <div class="appt-info">
+            <div class="appt-doctor"><a href="{{ url_for('doctor.patient_detail', patient_id=a['Patient_ID']) }}" class="patient-link">{{ a['Patient_Name'] }}</a></div>
+            <div class="appt-spec" style="color:var(--text-m)">{{ a['Notes'] or 'No notes' }}</div>
+            <div class="appt-time">Date: {{ a['Scheduled_At'][:10] }} | Time: {{ a['Scheduled_At'][11:16] }}</div>
+          </div>
+          <div class="appt-meta">
+            <span class="badge badge-{{ 'tele' if a['Mode'] == 'Telemedicine' else 'in' }}">{{ a['Mode'] }}</span>
+            <div class="appt-actions">
+              <button class="btn-mark" onclick="markAppt({{ a['Appointment_ID'] }}, 'Completed', this)" id="mark-done-{{ a['Appointment_ID'] }}">✓ Done</button>
+              <button class="btn-mark btn-cancel-appt" onclick="markAppt({{ a['Appointment_ID'] }}, 'Cancelled', this)" id="mark-cancel-{{ a['Appointment_ID'] }}">✕</button>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="empty-state" id="no-upcoming-appts">
+          <div class="empty-icon">📅</div>
+          <p>No upcoming appointments</p>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- ── Patient AI Chat Activity ── -->
+    <div class="card" id="card-patient-chats">
+      <div class="card-header">
+        <h2 class="card-title">💬 Patient AI Chat Activity</h2>
+        <span class="card-hint">What patients asked the AI</span>
+      </div>
+
+      {% if patient_alerts %}
+      <div style="margin-bottom:1rem">
+        <div class="card-header"><h2 class="card-title" style="font-size:.85rem;color:var(--red)">⚠️ Escalated Symptoms</h2></div>
+        {% for al in patient_alerts %}
+        {% if al['Is_Escalated'] %}
+        <div class="alert-row">
+          <div class="alert-dot sev-{{ al['Severity'] }}"></div>
+          <div style="flex:1">
+            <div style="font-weight:600;font-size:.875rem">{{ al['Patient_Name'] }}</div>
+            <div style="font-size:.8rem;color:var(--text-m)">{{ al['Symptoms'] }}</div>
+          </div>
+          <span class="severity-badge sev-{{ al['Severity'] }}" style="font-size:.75rem">{{ al['Severity'] }}</span>
+        </div>
+        {% endif %}
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      {% if patient_chats %}
+      <div class="card-header"><h2 class="card-title" style="font-size:.85rem">Recent Messages</h2></div>
+      {% for pc in patient_chats %}
+      <div class="recent-chat-item">
+        <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.25rem">
+          <div class="appt-avatar" style="width:28px;height:28px;font-size:.7rem">{{ pc['Patient_Name'][0] }}</div>
+          <strong style="font-size:.85rem">{{ pc['Patient_Name'] }}</strong>
+          <span class="badge badge-{{ pc['Intent'] or 'general' }}" style="font-size:.7rem">{{ pc['Intent'] or 'chat' }}</span>
+        </div>
+        <p style="font-size:.82rem;color:var(--text-m)">{{ pc['Last_Message'][:100] }}{% if pc['Last_Message']|length > 100 %}…{% endif %}</p>
+        <div class="recent-chat-time">{{ pc['Created_At'][:16] }}</div>
+      </div>
+      {% endfor %}
+      {% else %}
+      <div class="empty-state"><p style="font-size:.875rem">No patient chat activity yet.</p></div>
+      {% endif %}
+    </div>
+
+  </div>
+
+  <!-- ── All Appointments Table ── -->
+  <div class="card" id="card-all-appointments">
+    <div class="card-header">
+      <h2 class="card-title">📋 All Appointments</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="all-appointments-table">
+        <thead>
+          <tr><th>Patient</th><th>Date / Time</th><th>Mode</th><th>Status</th><th>Notes</th><th>Actions</th></tr>
+        </thead>
+        <tbody id="all-appts-body">
+          {% for a in all_appointments %}
+          <tr id="row-{{ a.Appointment_ID }}">
+            <td><a href="{{ url_for('doctor.patient_detail', patient_id=a.Patient_ID) }}" class="patient-link">{{ a.Patient_Name }}</a></td>
+            <td>Date: {{ a.Scheduled_At[:10] }}<br>Time: {{ a.Scheduled_At[11:16] }}</td>
+            <td>{{ a.Mode }}</td>
+            <td><span class="badge badge-{{ a.Status.lower() }}" id="status-{{ a.Appointment_ID }}">{{ a.Status }}</span></td>
+            <td style="font-size:.8rem;color:var(--text-m)">{{ a.Notes or '—' }}</td>
+            <td>
+              {% if a.Status == 'Scheduled' %}
+              <button class="btn-mark" onclick="markAppt({{ a.Appointment_ID }}, 'Completed', this)" id="t-done-{{ a.Appointment_ID }}">✓</button>
+              <button class="btn-mark btn-cancel-appt" onclick="markAppt({{ a.Appointment_ID }}, 'Cancelled', this)" id="t-cancel-{{ a.Appointment_ID }}">✕</button>
+              {% else %}
+              <span style="color:var(--text-d);font-size:.8rem">—</span>
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── Doctor Notes ── -->
+  {% if my_notes %}
+  <div class="card" id="card-notes">
+    <div class="card-header">
+      <h2 class="card-title">📝 My Clinical Notes</h2>
+    </div>
+    {% for n in my_notes %}
+    <div class="recent-chat-item" style="border-left-color:var(--blue)">
+      <div style="font-weight:600;font-size:.875rem;margin-bottom:.25rem">{{ n['Patient_Name'] }}</div>
+      <p style="font-size:.85rem;color:var(--text-m)">{{ n['Note'] }}</p>
+      <div class="recent-chat-time">{{ n['Created_At'][:16] }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+</div>
+
+<input type="hidden" id="csrf-token" value="{{ csrf_token }}"/>
+{% endblock %}
+
+{% block scripts %}
+<script>
+const CSRF = document.getElementById('csrf-token').value;
+
+// ── Mark appointment status ─────────────────────────────────────────
+async function markAppt(id, status, btn) {
+  btn.disabled = true;
+  const res = await fetch('/doctor/appointments/update', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json','X-CSRF-Token': CSRF},
+    body: JSON.stringify({appointment_id: id, status: status, csrf_token: CSRF})
+  });
+  const data = await res.json();
+  if (data.success) {
+    // Update badge
+    const badge = document.getElementById('status-' + id);
+    if (badge) { badge.className = 'badge badge-' + status.toLowerCase(); badge.textContent = status; }
+    // Remove action buttons from the row
+    const row = document.getElementById('row-' + id);
+    const upcomingItem = document.getElementById('appt-' + id);
+    if (upcomingItem && status !== 'Scheduled') upcomingItem.style.opacity = '0.4';
+    showToast(status === 'Completed' ? '✅ Appointment marked as Completed' : '✕ Appointment Cancelled', status === 'Completed' ? 'success' : 'info');
+    // Refresh live sync count
+    refreshSync();
+  }
+}
+
+// ── Live sync: poll for new appointments every 8s ───────────────────
+let lastCount = {{ stats.upcoming_count }};
+
+async function refreshSync() {
+  try {
+    const res = await fetch('/doctor/appointments/api');
+    const appts = await res.json();
+    const scheduled = appts.filter(a => a.Status === 'Scheduled');
+    const count = scheduled.length;
+    document.getElementById('upcoming-count').textContent = count;
+
+    if (count > lastCount) {
+      showToast('📅 New appointment booked by a patient!', 'success');
+      // Highlight the list
+      document.getElementById('card-upcoming-appointments').style.borderColor = 'var(--teal)';
+      setTimeout(() => document.getElementById('card-upcoming-appointments').style.borderColor = 'var(--border)', 3000);
+    }
+    lastCount = count;
+
+    // Update sync badge
+    const badge = document.getElementById('live-sync-badge');
+    badge.style.borderColor = 'rgba(34,197,94,.4)';
+    setTimeout(() => badge.style.borderColor = '', 1000);
+  } catch(e) {}
+}
+
+// Poll every 8 seconds
+setInterval(refreshSync, 8000);
+
+// Toast notification
+function showToast(msg, type) {
+  const t = document.createElement('div');
+  t.className = 'flash flash-' + (type || 'info');
+  t.style.cssText = 'position:fixed;bottom:1.5rem;right:1.5rem;z-index:9999;min-width:260px;animation:fadeUp .3s ease';
+  t.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()">✕</button>`;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 4000);
+}
+</script>
+{% endblock %}

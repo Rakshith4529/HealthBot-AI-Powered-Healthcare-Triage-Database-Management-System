@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% block title %}Login{% endblock %}
+
+{% block public_content %}
+<div class="auth-bg">
+  <div class="auth-card" id="login-card">
+    <div class="auth-header">
+      <div class="auth-logo">✚</div>
+      <h1 class="auth-title">MedAssist</h1>
+      <p class="auth-subtitle">Your AI-powered healthcare companion</p>
+    </div>
+
+    <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
+      <input type="hidden" name="csrf_token" value="{{ csrf_token }}"/>
+      <div class="form-group">
+        <label class="form-label" for="email">Email Address</label>
+        <input class="form-input" type="email" id="email" name="email" placeholder="you@example.com" required autocomplete="email"/>
+      </div>
+      <div class="form-group">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <label class="form-label" for="password" style="margin:0;">Password</label>
+          <a href="{{ url_for('auth.forgot_password') }}" style="font-size:.75rem;color:var(--teal);text-decoration:none;">Forgot password?</a>
+        </div>
+        <div class="input-wrap">
+          <input class="form-input" type="password" id="password" name="password" placeholder="••••••••" required/>
+          <button type="button" class="input-toggle" onclick="togglePwd('password')" id="toggle-pwd">👁</button>
+        </div>
+      </div>
+      <button type="submit" class="btn-primary btn-full" id="btn-login">Sign In</button>
+    </form>
+
+    <p class="auth-switch">New here? <a href="{{ url_for('auth.register') }}" id="link-register">Create account</a></p>
+
+    <div class="demo-accounts">
+      <p class="demo-title">Quick Demo Login</p>
+      <p class="demo-section-label">👤 Patients</p>
+      <div class="demo-grid demo-grid-3">
+        <button class="demo-btn" onclick="fill('alice@demo.com','Demo1234!')" id="demo-alice">Alice</button>
+        <button class="demo-btn" onclick="fill('bob@demo.com','Demo1234!')" id="demo-bob">Bob</button>
+        <button class="demo-btn" onclick="fill('carol@demo.com','Demo1234!')" id="demo-carol">Carol</button>
+      </div>
+      <p class="demo-section-label" style="margin-top:.75rem">🩺 Doctors</p>
+      <div class="demo-grid demo-grid-3">
+        <button class="demo-btn demo-btn-doctor" onclick="fill('dr.carter@medassist.com','Doctor1234!')" id="demo-dr-carter">Dr. Carter</button>
+        <button class="demo-btn demo-btn-doctor" onclick="fill('dr.thompson@medassist.com','Doctor1234!')" id="demo-dr-thompson">Dr. Thompson</button>
+        <button class="demo-btn demo-btn-doctor" onclick="fill('dr.brown@medassist.com','Doctor1234!')" id="demo-dr-brown">Dr. Brown</button>
+      </div>
+      <p class="demo-section-label" style="margin-top:.75rem">⚙ Admin</p>
+      <div class="demo-grid demo-grid-1">
+        <button class="demo-btn demo-btn-admin" onclick="fill('admin@medassist.com','Admin1234!')" id="demo-admin">Admin Panel</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+function fill(e,p){ document.getElementById('email').value=e; document.getElementById('password').value=p; }
+function togglePwd(id){ const el=document.getElementById(id); el.type=el.type==='password'?'text':'password'; }
+</script>
+{% endblock %}

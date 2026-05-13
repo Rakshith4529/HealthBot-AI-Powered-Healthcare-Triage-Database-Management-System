@@ -1,0 +1,117 @@
+{% extends 'base.html' %}
+{% block title %}Admin Panel{% endblock %}
+{% block topbar_title %}Admin Panel{% endblock %}
+
+{% block content %}
+<div class="page-body">
+
+  <!-- Stats -->
+  <div class="stats-grid">
+    <div class="stat-card" id="admin-stat-patients">
+      <div class="stat-icon stat-blue">👤</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.patients }}</div>
+        <div class="stat-label">Registered Patients</div>
+      </div>
+    </div>
+    <div class="stat-card" id="admin-stat-doctors">
+      <div class="stat-icon stat-green">🩺</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.doctors }}</div>
+        <div class="stat-label">Active Doctors</div>
+      </div>
+    </div>
+    <div class="stat-card" id="admin-stat-appointments">
+      <div class="stat-icon stat-purple">📅</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.appointments }}</div>
+        <div class="stat-label">Total Appointments</div>
+      </div>
+    </div>
+    <div class="stat-card" id="admin-stat-chats">
+      <div class="stat-icon stat-teal">💬</div>
+      <div class="stat-body">
+        <div class="stat-value">{{ stats.chats }}</div>
+        <div class="stat-label">Chat Sessions</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patients Table -->
+  <div class="card" id="admin-patients-card">
+    <div class="card-header">
+      <h2 class="card-title">👤 Patients</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="table-patients">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Email</th><th>Joined</th><th>Role</th></tr>
+        </thead>
+        <tbody>
+          {% for p in patients %}
+          <tr>
+            <td>{{ p.Patient_ID }}</td>
+            <td>{{ p.Name }}</td>
+            <td>{{ p.Email }}</td>
+            <td>{{ p.Created_At[:10] if p.Created_At else 'N/A' }}</td>
+            <td><span class="badge {{ 'badge-admin' if p.Is_Admin else 'badge-patient' }}">{{ 'Admin' if p.Is_Admin else 'Patient' }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Doctors Table -->
+  <div class="card" id="admin-doctors-card">
+    <div class="card-header">
+      <h2 class="card-title">🩺 Doctors</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="table-doctors">
+        <thead>
+          <tr><th>ID</th><th>Name</th><th>Specialization</th><th>Experience</th><th>Rating</th></tr>
+        </thead>
+        <tbody>
+          {% for d in doctors %}
+          <tr>
+            <td>{{ d.Doctor_ID }}</td>
+            <td>Dr. {{ d.Name }}</td>
+            <td>{{ d.Specialization }}</td>
+            <td>{{ d.Experience_Years }} yrs</td>
+            <td>⭐ {{ d.Rating }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Appointments Table -->
+  <div class="card" id="admin-appts-card">
+    <div class="card-header">
+      <h2 class="card-title">📅 Appointments</h2>
+    </div>
+    <div class="table-wrap">
+      <table class="data-table" id="table-appointments">
+        <thead>
+          <tr><th>ID</th><th>Patient</th><th>Doctor</th><th>Date/Time</th><th>Mode</th><th>Status</th></tr>
+        </thead>
+        <tbody>
+          {% for a in appointments %}
+          <tr>
+            <td>{{ a.Appointment_ID }}</td>
+            <td>{{ a.Patient_Name }}</td>
+            <td>Dr. {{ a.Doctor_Name }}</td>
+            <td>{{ a.Scheduled_At[:16] }}</td>
+            <td>{{ a.Mode }}</td>
+            <td><span class="badge badge-{{ a.Status.lower() }}">{{ a.Status }}</span></td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
