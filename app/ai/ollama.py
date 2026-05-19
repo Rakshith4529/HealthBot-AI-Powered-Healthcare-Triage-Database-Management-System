@@ -1,10 +1,18 @@
 import json
 import urllib.request
 import urllib.error
+from typing import Optional
 from flask import current_app
 
 
-def call_ollama(prompt: str, system: str = None, history: list = None, timeout: int = 25) -> str | None:
+def call_ollama(prompt: str, system: str = None, history: list = None, timeout: int = 25) -> Optional[str]:
+=======
+from typing import Optional
+from flask import current_app
+
+
+def call_ollama(prompt: str, system: str = None, history: list = None, timeout: int = 25) -> Optional[str]:
+>>>>>>> a0f31fb (checking)
     """Call local Ollama. Returns response text or None on failure."""
     url = f"{current_app.config['OLLAMA_URL']}/api/generate"
     model = current_app.config['OLLAMA_MODEL']

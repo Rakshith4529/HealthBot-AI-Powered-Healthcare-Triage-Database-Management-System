@@ -3,6 +3,7 @@ Master AI Agent — intent routing via Ollama with rule-based fallback.
 """
 import json
 import re
+from typing import Optional
 from flask import current_app
 from app.ai.ollama import call_ollama
 from app.ai import tools
@@ -41,7 +42,10 @@ Severity rules (symptom_check only):
 Be warm, empathetic, professional. Never definitively diagnose. Respond ONLY with the JSON."""
 
 
-def _parse(raw: str) -> dict | None:
+def _parse(raw: str) -> Optional[dict]:
+=======
+def _parse(raw: str) -> Optional[dict]:
+>>>>>>> a0f31fb (checking)
     if not raw:
         return None
     try:
